@@ -2,38 +2,26 @@ import sys
 import os
 from ultralytics import YOLO
 
-# Força o Python a ler as bibliotecas do seu HD externo se necessário
 sys.path.insert(0, r"E:\pip_packages")
 
 
 def main():
-    print("--- Iniciando Otimização e Exportação Oficial no Servidor ---")
+    print("--- Otimização Avançada com Metadados de Detecção ---")
 
-    # 1. Carrega o modelo PyTorch treinado
     if not os.path.exists("model.pt"):
-        print("Erro: O arquivo model.pt não foi encontrado na raiz do projeto!")
+        print("Erro: model.pt não encontrado!")
         return
 
+    # Carrega o seu modelo treinado
     model = YOLO("model.pt")
 
-    # 2. Exporta diretamente para TFLite usando o ambiente Linux do GitHub
-    print("Exportando model.pt para model.tflite nativamente...")
-    try:
-        # Tenta a exportação padrão exigida pelo desafio
-        model.export(format="tflite", imgsz=640)
-        print("Exportação direta concluída com sucesso!")
-    except Exception as e:
-        print(f"Aviso na exportação direta: {e}")
-        print("Tentando alternativa compatível...")
-        # Alternativa caso o ambiente precise do formato atualizado LiteRT
-        model.export(format="litert", imgsz=640)
-
-        # Garante que o arquivo final se chamará exatamente model.tflite
-        if os.path.exists("model.litert") and not os.path.exists("model.tflite"):
-            os.rename("model.litert", "model.tflite")
-            print("Renomeado model.litert para model.tflite com sucesso.")
-
-    print("\n--- Processo concluído! ---")
+    # Se estiver no Windows, vamos apenas avisar. O foco é a execução na esteira.
+    if os.getenv("GITHUB_ACTIONS") == "true" or sys.platform != "win32":
+        print("Ambiente de produção/Linux detectado. Iniciando exportação...")
+        # nms=True força a inclusão das operações de detecção direto no arquivo final
+        model.export(format="tflite", imgsz=640, nms=True, int8=False)
+    else:
+        print("Ambiente Windows detectado. A exportação com metadados rodará na nuvem.")
 
 
 if __name__ == "__main__":
