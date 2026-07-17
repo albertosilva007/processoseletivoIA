@@ -1,7 +1,7 @@
 name: Exportar Modelo para TFLite no Linux
 
 on:
-  workflow_dispatch: # Ativa o botão manual no site do GitHub
+  workflow_dispatch:
 
 jobs:
   build:
@@ -16,16 +16,24 @@ jobs:
         with:
           python-version: '3.10'
 
-      - name: Instalar Dependências
+      - name: Instalar Dependências Estáveis
         run: |
-          pip install ultralytics
+          pip install ultralytics onnx
+          pip install tensorflow-cpu==2.15.0  # Versão ultra estável sem bugs de compilação
+          pip install git+https://github.com/onnx/onnx-tensorflow.git
 
-      - name: Executar Exportação Oficial na Pasta Correta
+      - name: Executar Exportação e Conversão Direta
         run: |
           cd projetos/3-deteccao-mascaras
+          # Executa o script para gerar o model.onnx
           python optimize_model.py
+          
+          # Executa o comando direto do terminal para converter o ONNX para TFLite pulando o erro do litert
+          onnx-tf convert -i model.onnx -o model_pb
+          python -c "import tensorflow as tf; converter = tf.lite.TFLiteConverter.from_saved_model('model_pb'); tflite_model = converter.convert(); open('model.tflite', 'wb').write(tflite_model)"
+          echo "Conversão concluída com sucesso!"
 
-      - name: Disponibilizar o modelo para Download (Artefato)
+      - name: Disponibilizar o modelo para Download
         uses: actions/upload-artifact@v4
         with:
           name: modelo-tflite-convertido
