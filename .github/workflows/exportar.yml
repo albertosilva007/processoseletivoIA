@@ -16,22 +16,25 @@ jobs:
         with:
           python-version: '3.10'
 
-      - name: Instalar Dependências Estáveis
+      - name: Instalar Dependências Limpas da Ultralytics
         run: |
-          pip install ultralytics onnx
-          pip install tensorflow-cpu==2.15.0  # Versão ultra estável sem bugs de compilação
-          pip install git+https://github.com/onnx/onnx-tensorflow.git
+          pip install --upgrade pip
+          pip install ultralytics
+          # Instala as ferramentas oficiais do Google para evitar o auto-update quebrado
+          pip install ai-edge-litert litert-torch
 
-      - name: Executar Exportação e Conversão Direta
+      - name: Executar Exportação Oficial via CLI da Ultralytics
         run: |
           cd projetos/3-deteccao-mascaras
-          # Executa o script para gerar o model.onnx
-          python optimize_model.py
-          
-          # Executa o comando direto do terminal para converter o ONNX para TFLite pulando o erro do litert
-          onnx-tf convert -i model.onnx -o model_pb
-          python -c "import tensorflow as tf; converter = tf.lite.TFLiteConverter.from_saved_model('model_pb'); tflite_model = converter.convert(); open('model.tflite', 'wb').write(tflite_model)"
-          echo "Conversão concluída com sucesso!"
+          # Executa direto pelo comando oficial da CLI para evitar travas de script local
+          yolo export model=model.pt format=tflite imgsz=640
+
+      - name: Mover e Renomear Arquivo Convertido
+        run: |
+          cd projetos/3-deteccao-mascaras
+          # A Ultralytics cria uma pasta ou renomeia o arquivo. Vamos caçá-lo e garantir o nome correto.
+          find . -name "*.tflite" -exec mv {} model.tflite \;
+          ls -l model.tflite
 
       - name: Disponibilizar o modelo para Download
         uses: actions/upload-artifact@v4
