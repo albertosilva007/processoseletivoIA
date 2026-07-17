@@ -1,0 +1,27 @@
+name: Exportar Modelo para TFLite no Linux
+
+on:
+  workflow_dispatch: # Permite a execução manual pelo botão no site
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Permissão crucial para o bot fazer o commit de volta
+
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Instalar Dependências da Ultralytics
+        run: |
+          pip install ultralytics
+
+      - name: Executar Exportação Oficial
+        run: |
+          python projetos/3-deteccao-mascaras/optimize_model.py
