@@ -6,8 +6,6 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write # Permissão para o robô fazer o commit de volta pro seu Git
 
     steps:
       - name: Checkout do código
@@ -24,18 +22,12 @@ jobs:
 
       - name: Executar Exportação Oficial na Pasta Correta
         run: |
-          # Navega até a pasta onde o modelo e o script estão
           cd projetos/3-deteccao-mascaras
           python optimize_model.py
 
-      - name: Forçar Auto-Commit do arquivo gerado para o repositório
-        run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          
-          # Adiciona o arquivo gerado dentro da pasta correta do projeto
-          git add projetos/3-deteccao-mascaras/model.tflite
-          
-          # O [skip ci] evita que esse commit dispare a esteira antes da hora
-          git commit -m "Bot: Injetando model.tflite gerado no Linux [skip ci]" || echo "Nenhuma alteração para commitar"
-          git push
+      - name: Disponibilizar o modelo para Download (Artefato)
+        uses: actions/upload-artifact@v4
+        with:
+          name: modelo-tflite-convertido
+          path: projetos/3-deteccao-mascaras/model.tflite
+          if-no-files-found: error
