@@ -7,56 +7,51 @@ sys.path.insert(0, r"E:\pip_packages")
 
 
 def main():
-    print("--- Otimização Avançada e Ajuste de Tensores de Saída ---")
+    print("--- Otimização Dinâmica: Modo de Compatibilidade Estrita TFLite ---")
 
     if not os.path.exists("model.pt"):
-        print("Erro: model.pt não encontrado na raiz!")
+        print("Erro: model.pt não encontrado!")
         return
 
     model = YOLO("model.pt")
 
     if os.getenv("GITHUB_ACTIONS") == "true" or sys.platform != "win32":
-        print("Ambiente Linux do GitHub detectado. Removendo arquivos antigos...")
+        print("Ambiente GitHub Actions/Linux detectado.")
 
-        # Limpeza absoluta para garantir que nenhum arquivo fantasma interfira
+        # Limpeza total de execuções anteriores
         for f in ["model.tflite", "model_float32.tflite"]:
             if os.path.exists(f):
                 os.remove(f)
         if os.path.exists("model_saved_model"):
             shutil.rmtree("model_saved_model")
 
-        print("Iniciando exportação com compatibilidade máxima de tensores...")
+        print("Exportando modelo com precisão Float32 padrão (sem quantização)...")
+        # Força o formato puro float32 e tamanho de imagem padrão exigido pelo edital
+        exported_path = model.export(format="tflite", imgsz=640, int8=False)
+        print(f"Caminho gerado: {exported_path}")
 
-        # Exporta desativando o nms embutido complexo e fixando o formato estável
-        # Muitas esteiras aplicam o NMS no próprio script de teste, esperando a saída padrão plana
-        exported_path = model.export(format="tflite", imgsz=640, nms=False)
-        print(f"Caminho gerado pela Ultralytics: {exported_path}")
-
-        # Procura e move o arquivo gerado para a raiz
+        # Mapeamento e movimentação para a raiz com o nome exato esperado
         if exported_path and os.path.exists(exported_path):
             if os.path.isdir(exported_path):
-                # Se for uma pasta, busca o arquivo lá dentro
                 for f in os.listdir(exported_path):
                     if f.endswith(".tflite"):
                         shutil.move(os.path.join(
                             exported_path, f), "model.tflite")
-                        print(
-                            f"Movido de dentro do diretório: {f} -> model.tflite")
+                        print(f"Movido do diretório: {f} -> model.tflite")
             else:
                 shutil.move(exported_path, "model.tflite")
-                print("Arquivo movido diretamente para model.tflite")
+                print("Arquivo movido para a raiz.")
 
-        # Garante o fallback de nome se ele salvou em outro lugar da pasta atual
+        # Fallback de segurança para o nome padrão float32 da Ultralytics
         if os.path.exists("model_saved_model/model_float32.tflite"):
             shutil.move("model_saved_model/model_float32.tflite",
                         "model.tflite")
-            print("Movido fallback de model_saved_model para a raiz.")
+            print("Fallback: movido model_float32.tflite para a raiz.")
 
         if os.path.exists("model.tflite"):
-            print(
-                f"Sucesso absoluto! Tamanho do arquivo final: {os.path.getsize('model.tflite')} bytes")
+            print("Sucesso: model.tflite pronto para avaliação.")
     else:
-        print("Ambiente local Windows. O processamento real rodará na nuvem.")
+        print("Ambiente Windows local detectado.")
 
 
 if __name__ == "__main__":
