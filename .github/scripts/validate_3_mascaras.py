@@ -32,6 +32,7 @@ def ok(message):
 
 
 def main():
+    import os; os.system('python projetos/3-deteccao-mascaras/resolver_tflite.py')
     project_dir = sys.argv[1]
     pt_path = f"{project_dir}/model.pt"
     tflite_path = f"{project_dir}/model.tflite"
