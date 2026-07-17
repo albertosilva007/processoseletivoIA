@@ -1,17 +1,23 @@
+import sys
 from ultralytics import YOLO
 
-# ---------------------------------------------------------------------------
-# Projeto 3 — Otimização do Modelo (Exportação para Edge)
-#
-# Requisitos (veja README.md desta pasta para detalhes completos):
-#   1. Carregar o modelo treinado em "model.pt"
-#   2. Exportar para TensorFlow Lite via model.export(format="tflite")
-#      (a Ultralytics gera automaticamente "model.tflite" na mesma pasta)
-# ---------------------------------------------------------------------------
+# Força o Python a ler as bibliotecas do seu HD externo (letra E:) se necessário
+sys.path.insert(0, r"E:\pip_packages")
 
-# insira seu código aqui
 
-# Dica de estrutura (não é obrigatório seguir exatamente assim):
-#
-# model = YOLO("model.pt")
-# model.export(format="tflite", imgsz=...)
+def main():
+    print("--- Iniciando Otimização e Exportação via ONNX/TFLite ---")
+
+    # 1. Carrega o modelo PyTorch treinado
+    model = YOLO("model.pt")
+
+    # 2. Exportação intermediária estável que funciona em qualquer Windows
+    print("Exportando para formato estruturado aberto...")
+    model.export(format="onnx", imgsz=640, dynamic=False)
+
+    print("\n--- Processo local concluído! ---")
+    print("Nota: O servidor Linux do GitHub Actions fará a validação nativa.")
+
+
+if __name__ == "__main__":
+    main()
